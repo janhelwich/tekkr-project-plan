@@ -17,8 +17,8 @@ export function HomePage() {
     return localStorage.getItem(SELECTED_CHAT_KEY);
   });
 
-  const { data: chats = [], isLoading: isLoadingChats } = useChatsQuery();
-  const { data: currentChat, isLoading: isLoadingChat } = useChatQuery(chatId);
+  const { data: chats = [], isLoading: isLoadingChats, isSuccess: chatsLoaded } = useChatsQuery();
+  const { data: currentChat, isLoading: isLoadingChat, isError: chatError } = useChatQuery(chatId);
   const createChatMutation = useCreateChatMutation();
   const sendMessageMutation = useSendMessageMutation(chatId);
 
@@ -31,12 +31,19 @@ export function HomePage() {
     }
   }, [chatId]);
 
-  // Validate that saved chatId exists in the chat list
+  // Clear chatId if it doesn't exist on the server (e.g., after server restart)
   useEffect(() => {
-    if (chatId && chats.length > 0 && !chats.find((c) => c.id === chatId)) {
+    if (chatId && chatsLoaded && !chats.find((c) => c.id === chatId)) {
       setChatId(null);
     }
-  }, [chatId, chats]);
+  }, [chatId, chats, chatsLoaded]);
+
+  // Also clear if fetching the chat fails (404)
+  useEffect(() => {
+    if (chatError) {
+      setChatId(null);
+    }
+  }, [chatError]);
 
   const handleCreateChat = async () => {
     const newChat = await createChatMutation.mutateAsync();

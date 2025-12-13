@@ -1,15 +1,15 @@
 import { LLMProvider } from "./provider";
 import { DummyLLMProvider } from "./dummy";
+import { AnthropicProvider } from "./anthropic";
 
 export type LLMProviderType = "dummy" | "anthropic" | "openai" | "gemini";
 
-export function createLLMProvider(type: LLMProviderType = "dummy"): LLMProvider {
+export function createLLMProvider(type: LLMProviderType = "anthropic"): LLMProvider {
   switch (type) {
     case "dummy":
       return new DummyLLMProvider();
     case "anthropic":
-      // TODO: Implement AnthropicProvider
-      throw new Error("Anthropic provider not yet implemented");
+      return new AnthropicProvider();
     case "openai":
       // TODO: Implement OpenAIProvider
       throw new Error("OpenAI provider not yet implemented");
@@ -17,11 +17,11 @@ export function createLLMProvider(type: LLMProviderType = "dummy"): LLMProvider 
       // TODO: Implement GeminiProvider
       throw new Error("Gemini provider not yet implemented");
     default:
-      return new DummyLLMProvider();
+      return new AnthropicProvider();
   }
 }
 
-// Default provider instance
-export const llmProvider = createLLMProvider("dummy");
+// Default provider instance - uses Anthropic
+export const llmProvider = createLLMProvider("anthropic");
 
-export { LLMProvider } from "./provider";
+export type { LLMProvider } from "./provider";

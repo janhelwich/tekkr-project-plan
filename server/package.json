@@ -10,15 +10,17 @@
     "build:ts": "tsc",
     "watch:ts": "tsc -w",
     "start": "npm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
-    "dev:start": "fastify start -p 8000 --ignore-watch=.ts$ -w -l info -P dist/app.js"
+    "dev:start": "fastify start -p 8000 --ignore-watch=.ts$ -w -l info -P -r dotenv/config dist/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@fastify/autoload": "^6.0.0",
     "@fastify/cors": "^11.1.0",
     "@fastify/sensible": "^6.0.0",
+    "dotenv": "^17.2.3",
     "fastify": "^5.0.0",
     "fastify-cli": "^7.4.0",
     "fastify-plugin": "^5.0.0"
