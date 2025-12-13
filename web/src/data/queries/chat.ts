@@ -41,8 +41,11 @@ export function useCreateChatMutation() {
       }
       return response.data.chat as ChatReference;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
+    onSuccess: (newChat) => {
+      // Optimistically add the new chat to the cache immediately
+      queryClient.setQueryData<ChatReference[]>(["chats"], (old) => {
+        return old ? [newChat, ...old] : [newChat];
+      });
     },
   });
 }

@@ -70,6 +70,7 @@ export function HomePage() {
       <div className={"flex flex-col pt-8 max-w-4xl ms-64 w-full"}>
         {chatId ? (
           <ChatWindow
+            key={chatId}
             title={currentChat?.name ?? "Chat"}
             messages={messages}
             isLoading={isLoading}
@@ -125,7 +126,7 @@ function ChatWindow({
         </MessageContainer>
       ))}
       {isLoading && <AssistantLoadingIndicator />}
-      <ChatInputBox onSend={onSend} disabled={isLoading} />
+      <ChatInputBox onSend={onSend} disabled={isLoading} autoFocus />
     </div>
   );
 }

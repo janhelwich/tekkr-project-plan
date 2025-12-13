@@ -1,11 +1,23 @@
-import React, {ChangeEvent, EventHandler, KeyboardEventHandler, useRef, useState} from "react";
+import React, {ChangeEvent, EventHandler, KeyboardEventHandler, useRef, useState, useEffect} from "react";
 import {Button} from "./ui/button";
 import {SendIcon} from "lucide-react";
 import {Textarea} from "./ui/textarea";
 
-export function ChatInputBox({onSend, disabled = false}: { onSend: (message: string) => void; disabled?: boolean }) {
+interface ChatInputBoxProps {
+  onSend: (message: string) => void;
+  disabled?: boolean;
+  autoFocus?: boolean;
+}
+
+export function ChatInputBox({onSend, disabled = false, autoFocus = false}: ChatInputBoxProps) {
   const [input, setInput] = useState("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (autoFocus && textAreaRef.current) {
+      textAreaRef.current.focus();
+    }
+  }, [autoFocus]);
 
   const handleSend = () => {
     onSend(input);
