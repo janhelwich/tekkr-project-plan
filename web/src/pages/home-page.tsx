@@ -2,6 +2,7 @@ import { ChatSidebar } from "../components/chat-sidebar";
 import { useEffect, useState } from "react";
 import { ChatInputBox } from "../components/chat-input-box";
 import { MessageContainer, AssistantLoadingIndicator } from "../components/message";
+import { MessageContent } from "../components/message-content";
 import {
   useChatsQuery,
   useChatQuery,
@@ -120,7 +121,7 @@ function ChatWindow({
       )}
       {messages.map((message, index) => (
         <MessageContainer role={message.role} key={index}>
-          {message.content}
+          <MessageContent content={message.content} />
         </MessageContainer>
       ))}
       {isLoading && <AssistantLoadingIndicator />}
