@@ -85,8 +85,32 @@ export function useSendMessageMutation(chatId: string | null) {
         throw new Error(getErrorMessage(error, "Failed to send message"));
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chat", chatId] });
+    onMutate: async ({ message }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["chat", chatId] });
+
+      // Snapshot the previous value
+      const previousChat = queryClient.getQueryData<Chat>(["chat", chatId]);
+
+      // Optimistically update with user message
+      if (previousChat) {
+        queryClient.setQueryData<Chat>(["chat", chatId], {
+          ...previousChat,
+          messages: [...previousChat.messages, { role: "user", content: message }],
+        });
+      }
+
+      return { previousChat };
+    },
+    onError: (_error, _variables, context) => {
+      // Rollback to previous state on error
+      if (context?.previousChat) {
+        queryClient.setQueryData(["chat", chatId], context.previousChat);
+      }
+    },
+    onSuccess: (newChat) => {
+      // Update with the full response including assistant message
+      queryClient.setQueryData(["chat", chatId], newChat);
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
   });
