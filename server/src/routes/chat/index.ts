@@ -6,7 +6,7 @@ import {
   addMessage,
   updateChatName,
 } from "../../services/chat-store";
-import { llmProvider } from "../../services/llm";
+import { getProvider, LLMProviderType } from "../../services/llm";
 
 const chatRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
   // Get all chats
@@ -36,10 +36,10 @@ const chatRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
   // Send a message to a chat
   fastify.post<{
     Params: { id: string };
-    Body: { message: string };
+    Body: { message: string; provider?: LLMProviderType };
   }>("/:id/message", async (request, reply) => {
     const { id } = request.params;
-    const { message } = request.body;
+    const { message, provider = "anthropic" } = request.body;
 
     if (!message || typeof message !== "string") {
       return reply.status(400).send({ error: "Message is required" });
@@ -58,7 +58,8 @@ const chatRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
     }
 
     try {
-      // Get LLM response
+      // Get LLM response using selected provider
+      const llmProvider = getProvider(provider);
       const response = await llmProvider.generateResponse(chat.messages);
 
       // Add assistant message

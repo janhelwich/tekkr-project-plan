@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../client";
-import { Chat, ChatReference } from "../types";
+import { Chat, ChatReference, LLMProvider } from "../types";
 
 export function useChatsQuery() {
   return useQuery({
@@ -54,10 +54,11 @@ export function useSendMessageMutation(chatId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async ({ message, provider }: { message: string; provider: LLMProvider }) => {
       if (!chatId) throw new Error("No chat selected");
       const response = await apiClient.post(`/chat/${chatId}/message`, {
         message,
+        provider,
       });
       if (response.status !== 200) {
         throw new Error("Failed to send message");

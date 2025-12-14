@@ -1,24 +1,28 @@
 import { LLMProvider } from "./provider";
-import { DummyLLMProvider } from "./dummy";
 import { AnthropicProvider } from "./anthropic";
+import { OpenAIProvider } from "./openai";
 
-export type LLMProviderType = "dummy" | "anthropic" | "openai" | "gemini";
+export type LLMProviderType = "anthropic" | "openai";
 
 export function createLLMProvider(type: LLMProviderType = "anthropic"): LLMProvider {
   switch (type) {
-    case "dummy":
-      return new DummyLLMProvider();
     case "anthropic":
       return new AnthropicProvider();
     case "openai":
-      // TODO: Implement OpenAIProvider
-      throw new Error("OpenAI provider not yet implemented");
-    case "gemini":
-      // TODO: Implement GeminiProvider
-      throw new Error("Gemini provider not yet implemented");
+      return new OpenAIProvider();
     default:
       return new AnthropicProvider();
   }
+}
+
+// Provider cache to reuse instances
+const providerCache = new Map<LLMProviderType, LLMProvider>();
+
+export function getProvider(type: LLMProviderType): LLMProvider {
+  if (!providerCache.has(type)) {
+    providerCache.set(type, createLLMProvider(type));
+  }
+  return providerCache.get(type)!;
 }
 
 // Default provider instance - uses Anthropic
