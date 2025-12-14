@@ -1,5 +1,5 @@
 import { ChatSidebar } from "../components/chat-sidebar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChatInputBox } from "../components/chat-input-box";
 import { MessageContainer, AssistantLoadingIndicator } from "../components/message";
 import { MessageContent } from "../components/message-content";
@@ -147,6 +147,13 @@ function ChatWindow({
   provider: LLMProvider;
   onProviderChange: (provider: LLMProvider) => void;
 }) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change or loading state changes
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
+
   return (
     <div className={"flex flex-col gap-4"}>
       <div className="flex items-center justify-between">
@@ -164,6 +171,7 @@ function ChatWindow({
         </MessageContainer>
       ))}
       {isLoading && <AssistantLoadingIndicator />}
+      <div ref={messagesEndRef} />
       <ChatInputBox onSend={onSend} disabled={isLoading} autoFocus />
     </div>
   );
