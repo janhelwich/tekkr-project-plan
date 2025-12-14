@@ -4,6 +4,7 @@ import { ChatInputBox } from "../components/chat-input-box";
 import { MessageContainer, AssistantLoadingIndicator } from "../components/message";
 import { MessageContent } from "../components/message-content";
 import { ModelSelector } from "../components/model-selector";
+import { useToast } from "../hooks/use-toast";
 import {
   useChatsQuery,
   useChatQuery,
@@ -16,6 +17,7 @@ const SELECTED_CHAT_KEY = "selectedChatId";
 const SELECTED_PROVIDER_KEY = "selectedProvider";
 
 export function HomePage() {
+  const { toast } = useToast();
   const [chatId, setChatId] = useState<string | null>(() => {
     return localStorage.getItem(SELECTED_CHAT_KEY);
   });
@@ -23,8 +25,8 @@ export function HomePage() {
     return (localStorage.getItem(SELECTED_PROVIDER_KEY) as LLMProvider) || "anthropic";
   });
 
-  const { data: chats = [], isLoading: isLoadingChats, isSuccess: chatsLoaded } = useChatsQuery();
-  const { data: currentChat, isLoading: isLoadingChat, isError: chatError } = useChatQuery(chatId);
+  const { data: chats = [], isSuccess: chatsLoaded } = useChatsQuery();
+  const { data: currentChat, isError: chatError } = useChatQuery(chatId);
   const createChatMutation = useCreateChatMutation();
   const sendMessageMutation = useSendMessageMutation(chatId);
 
@@ -57,13 +59,30 @@ export function HomePage() {
   }, [chatError]);
 
   const handleCreateChat = async () => {
-    const newChat = await createChatMutation.mutateAsync();
-    setChatId(newChat.id);
+    try {
+      const newChat = await createChatMutation.mutateAsync();
+      setChatId(newChat.id);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to create chat",
+        description: "Could not create a new chat. Please try again.",
+      });
+    }
   };
 
   const handleSendMessage = async (message: string) => {
     if (!chatId) return;
-    await sendMessageMutation.mutateAsync({ message, provider });
+    try {
+      await sendMessageMutation.mutateAsync({ message, provider });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      toast({
+        variant: "destructive",
+        title: "Failed to send message",
+        description: errorMessage,
+      });
+    }
   };
 
   const messages = currentChat?.messages ?? [];

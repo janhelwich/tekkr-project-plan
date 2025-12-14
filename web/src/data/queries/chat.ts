@@ -1,6 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { apiClient } from "../client";
 import { Chat, ChatReference, LLMProvider } from "../types";
+
+// Helper to extract error message from API response
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof AxiosError && error.response?.data?.error) {
+    return error.response.data.error;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
 
 export function useChatsQuery() {
   return useQuery({
@@ -35,11 +47,15 @@ export function useCreateChatMutation() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post("/chat");
-      if (response.status !== 200) {
-        throw new Error("Failed to create chat");
+      try {
+        const response = await apiClient.post("/chat");
+        if (response.status !== 200) {
+          throw new Error("Failed to create chat");
+        }
+        return response.data.chat as ChatReference;
+      } catch (error) {
+        throw new Error(getErrorMessage(error, "Failed to create chat"));
       }
-      return response.data.chat as ChatReference;
     },
     onSuccess: (newChat) => {
       // Optimistically add the new chat to the cache immediately
@@ -56,14 +72,18 @@ export function useSendMessageMutation(chatId: string | null) {
   return useMutation({
     mutationFn: async ({ message, provider }: { message: string; provider: LLMProvider }) => {
       if (!chatId) throw new Error("No chat selected");
-      const response = await apiClient.post(`/chat/${chatId}/message`, {
-        message,
-        provider,
-      });
-      if (response.status !== 200) {
-        throw new Error("Failed to send message");
+      try {
+        const response = await apiClient.post(`/chat/${chatId}/message`, {
+          message,
+          provider,
+        });
+        if (response.status !== 200) {
+          throw new Error("Failed to send message");
+        }
+        return response.data.chat as Chat;
+      } catch (error) {
+        throw new Error(getErrorMessage(error, "Failed to send message"));
       }
-      return response.data.chat as Chat;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat", chatId] });

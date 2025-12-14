@@ -68,7 +68,26 @@ const chatRoutes: FastifyPluginAsync = async (fastify): Promise<void> => {
       return { chat };
     } catch (error) {
       fastify.log.error(error);
-      return reply.status(500).send({ error: "Failed to generate response" });
+
+      // Extract meaningful error message
+      let errorMessage = "Failed to generate response";
+      if (error instanceof Error) {
+        // Check for common API error patterns
+        const message = error.message.toLowerCase();
+        if (message.includes("api key") || message.includes("authentication") || message.includes("unauthorized")) {
+          errorMessage = `Invalid or missing API key for ${provider}`;
+        } else if (message.includes("rate limit") || message.includes("quota") || message.includes("exceeded")) {
+          errorMessage = `Rate limit or quota exceeded for ${provider}. Please try again later.`;
+        } else if (message.includes("timeout") || message.includes("timed out")) {
+          errorMessage = "Request timed out. Please try again.";
+        } else if (message.includes("network") || message.includes("connection")) {
+          errorMessage = "Network error. Please check your connection.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      return reply.status(500).send({ error: errorMessage });
     }
   });
 };
